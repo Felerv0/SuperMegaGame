@@ -21,10 +21,10 @@ class Level:
                     Player((x * tile_size[0], y * tile_size[1]), self.player)
 
     def scroll_x(self):
-        if self.player.sprite.rect.centerx < screen_width // 5 and self.player.sprite.direction.x < 0:
+        if self.player.sprite.rect.centerx < screen_width // 3 and self.player.sprite.direction.x < 0:
             self.shift = 8
             self.player.sprite.speed = 0
-        elif self.player.sprite.rect.centerx > screen_width - screen_width // 5 and self.player.sprite.direction.x > 0:
+        elif self.player.sprite.rect.centerx > screen_width - screen_width // 3 and self.player.sprite.direction.x > 0:
             self.shift = -8
             self.player.sprite.speed = 0
         else:
