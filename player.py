@@ -23,6 +23,7 @@ class Player(pygame.sprite.Sprite):
         self.on_ground, self.on_ceiling = False, False
         self.on_left, self.on_right = False, False
 
+
     def getInput(self):
         if getInput.isHolding(pygame.K_d):
             self.direction.x = 1

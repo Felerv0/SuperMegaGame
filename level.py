@@ -32,6 +32,9 @@ class Level:
             self.shift = 0
             self.player.sprite.speed = 8
 
+    def scroll_y(self):
+        pass
+
     def horizontalCollision(self):
         player = self.player.sprite
         player.rect.x += player.direction.x * player.speed
@@ -61,9 +64,16 @@ class Level:
                 if player.direction.y < 0:
                     player.rect.top = tile.rect.bottom
                     player.direction.y = 0
+                    player.on_ground = True
                 elif player.direction.y > 0:
                     player.rect.bottom = tile.rect.top
                     player.direction.y = 0
+                    player.on_ceiling = True
+
+        if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
+            player.on_ground = False
+        if player.on_ceiling and player.direction.y > 0:
+            player.on_ceiling = False
 
     def run(self):
         self.tiles.draw(self.surface)
