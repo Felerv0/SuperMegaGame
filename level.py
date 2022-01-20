@@ -9,6 +9,7 @@ class Level:
         self.surface = surface
         self.setupLevel(level_map)
         self.shift = 0
+        self.current_pos = (0, 0)
 
     def setupLevel(self, level_map):
         self.tiles = pygame.sprite.Group()
@@ -39,8 +40,17 @@ class Level:
             if tile.rect.colliderect(player.rect):
                 if player.direction.x < 0:
                     player.rect.left = tile.rect.right
+                    player.on_left = True
+                    self.current_pos = (player.rect.left, self.current_pos[1])
                 elif player.direction.x > 0:
                     player.rect.right = tile.rect.left
+                    player.on_right = True
+                    self.current_pos = (player.rect.right, self.current_pos[1])
+
+        if player.on_left and (player.rect.left < self.current_pos[0] or player.direction.x >= 0):
+            player.on_left = False
+        if player.on_right and (player.rect.right > self.current_pos[0] or player.direction.x <= 0):
+            player.on_right = False
 
     def verticalCollision(self):
         player = self.player.sprite

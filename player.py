@@ -20,6 +20,8 @@ class Player(pygame.sprite.Sprite):
         self.animation_index = 0
         self.current_animation = 'idle'
         self.look_left = False
+        self.on_ground, self.on_ceiling = False, False
+        self.on_left, self.on_right = False, False
 
     def getInput(self):
         if getInput.isHolding(pygame.K_d):
@@ -45,7 +47,7 @@ class Player(pygame.sprite.Sprite):
         self.animate()
 
     def loadAnimations(self):
-        self.animations = {'idle': [], 'run': [], 'fall': [], 'jump': []}
+        self.animations = {'idle': [], 'run': [], 'fall': [], 'jump': [], 'gun_run': []}
         for anim in self.animations.keys():
             self.animations[anim] = import_animation('assets/animations/player_' + anim)
 
@@ -71,3 +73,18 @@ class Player(pygame.sprite.Sprite):
             self.animation_index = 0
         self.image = pygame.transform.flip(self.animations[self.current_animation][int(self.animation_index)],
                                            self.look_left, False)
+
+        if self.on_ground:
+            if self.on_right:
+                self.rect = self.image.get_rect(bottomright=self.rect.bottomright)
+            elif self.on_left:
+                self.rect = self.image.get_rect(bottomleft=self.rect.bottomleft)
+            else:
+                self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+        elif self.on_ceiling:
+            if self.on_right:
+                self.rect = self.image.get_rect(topright=self.rect.topright)
+            elif self.on_left:
+                self.rect = self.image.get_rect(topleft=self.rect.topleft)
+            else:
+                self.rect = self.image.get_rect(midtop=self.rect.midtop)
