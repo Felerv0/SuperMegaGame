@@ -1,16 +1,4 @@
 from keyboardInput import *
-level_map = [
-    '',
-    '',
-    '',
-    '                   ',
-    '                   ',
-    '        XXX        ',
-    '                   ',
-    '     X      X                                  X ',
-    '    XX   @  X                                  X',
-    'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-]
 
 getInput = KeyboardInput()
 tile_size = (64, 64)
