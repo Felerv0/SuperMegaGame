@@ -1,5 +1,5 @@
 import pygame
-from settings import player_size, getInput
+from settings import player_size, getInput, screen_width
 from useful import import_animation
 
 
@@ -23,6 +23,8 @@ class Player(pygame.sprite.Sprite):
         self.on_ground, self.on_ceiling = False, False
         self.on_left, self.on_right = False, False
 
+        self.gun = None
+        self.bullets = pygame.sprite.Group()
 
     def getInput(self):
         if getInput.isHolding(pygame.K_d):
@@ -34,6 +36,15 @@ class Player(pygame.sprite.Sprite):
 
         if getInput.isKeyDown(pygame.K_SPACE):
             self.jump()
+        if getInput.isKeyDown(pygame.K_q):
+            self.shoot()
+
+    def shoot(self):
+        if self.look_left:
+            x_border = self.rect.left
+        else:
+            x_border = self.rect.right
+        Bullet(x_border, self.rect.bottom - (self.rect.height // 2), 16, 1, self.look_left, self.bullets)
 
     def jump(self):
         if 0 <= self.direction.y < self.gravity + 0.15:
@@ -89,3 +100,43 @@ class Player(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect(topleft=self.rect.topleft)
             else:
                 self.rect = self.image.get_rect(midtop=self.rect.midtop)
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, speed, damage, left, *groups):
+        super().__init__(*groups)
+        self.image = pygame.image.load('assets/sprites/bullet.png')
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = x, y
+        self.speed = speed
+        if left:
+            self.speed = -self.speed
+        self.damage = damage
+
+    def update(self, shift):
+        self.rect.x += self.speed + shift
+        if self.rect.x > screen_width + 500 or self.rect.x < -500:
+            self.kill()
+
+
+class Effect(pygame.sprite.Sprite):
+    def __init__(self, x, y, animation, speed, repeat=1, *groups):
+        super().__init__(*groups)
+        self.animation = import_animation(animation)
+        self.image = self.animation[0]
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = x, y
+        self.animation_index = 0
+        self.repetition = 0
+        self.speed = speed
+        self.repeat = repeat
+
+    def update(self, shift=0):
+        self.rect.x += shift
+        self.animation_index += self.speed
+        if self.animation_index > len(self.animation):
+            self.animation_index = 0
+            self.repetition += 1
+        if self.repetition >= self.repeat:
+            self.kill()
+        self.image = self.animation[int(self.animation_index)]

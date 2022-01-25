@@ -2,4 +2,5 @@ import pygame
 
 
 class Enemy(pygame.sprite.Sprite):
-    pass
+    def __init__(self, type, *groups):
+        super().__init__(*groups)

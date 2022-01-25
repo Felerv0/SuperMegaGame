@@ -1,7 +1,7 @@
 import pygame
 from tiles import *
 from settings import tile_size, screen_height, screen_width
-from player import Player
+from player import Player, Effect
 
 
 class Level:
@@ -13,7 +13,9 @@ class Level:
 
     def setupLevel(self, level_map):
         self.tiles = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
         self.player = pygame.sprite.GroupSingle()
+        self.effects = pygame.sprite.Group()
         for y, row in enumerate(level_map):
             for x, cell in enumerate(row):
                 if cell == 'X':
@@ -75,6 +77,13 @@ class Level:
         if player.on_ceiling and player.direction.y > 0:
             player.on_ceiling = False
 
+    def bulletCollision(self):
+        bullets = self.player.sprite.bullets
+        enemy_collisions = pygame.sprite.groupcollide(bullets, self.enemies, True, False)
+        tile_collisions = pygame.sprite.groupcollide(bullets, self.tiles, True, False)
+        for tile in tile_collisions.keys():
+            Effect(tile.rect.x - 8, tile.rect.y - 8, 'assets/animations/boom', 0.15, 1, self.effects)
+
     def run(self):
         self.tiles.draw(self.surface)
         self.tiles.update(self.shift)
@@ -82,4 +91,9 @@ class Level:
         self.player.draw(self.surface)
         self.horizontalCollision()
         self.verticalCollision()
+        self.bulletCollision()
         self.player.update()
+        self.player.sprite.bullets.update(self.shift)
+        self.player.sprite.bullets.draw(self.surface)
+        self.effects.update(self.shift)
+        self.effects.draw(self.surface)
