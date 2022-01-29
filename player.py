@@ -2,6 +2,32 @@ import pygame
 from settings import player_size, getInput, screen_width
 from useful import import_animation
 
+pygame.mixer.pre_init(44100, -16, 1, 512)
+pygame.init()
+jump_sound = pygame.mixer.Sound('assets/sounds/jump.wav')
+walk_sound = pygame.mixer.Sound('assets/sounds/walk.wav')
+
+def render_text(message, x, y, font_color=(0, 0, 0), font_type='assets/fonts/OpenSans-Bold.ttf', font_size=50):
+    font_type = pygame.font.Font(font_type, font_size)
+    text = font_type.render(message, True, font_color)
+    screen.blit(text, (x, y))
+
+def pause():
+    paused = True
+    while paused:
+        getInput.update()
+        if getInput.terminate:
+            pygame.quit()
+            sys.exit()
+
+        render_text('Paused. Press Enter to continue', 50, 300)
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            paused = False
+
+        pygame.display.update()
+        clock.tick(15)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, *groups):
@@ -28,14 +54,18 @@ class Player(pygame.sprite.Sprite):
 
     def getInput(self):
         if getInput.isHolding(pygame.K_d):
+            walk_sound.play()  # звук ходьбы
             self.direction.x = 1
         elif getInput.isHolding(pygame.K_a):
+            walk_sound.play() # звук ходьбы
             self.direction.x = -1
         else:
             self.direction.x = 0
 
         if getInput.isKeyDown(pygame.K_SPACE):
             self.jump()
+        if getInput.isKeyDown(pygame.K_ESCAPE):
+            pause()
         if getInput.isKeyDown(pygame.K_q):
             self.shoot()
 
@@ -48,6 +78,7 @@ class Player(pygame.sprite.Sprite):
 
     def jump(self):
         if 0 <= self.direction.y < self.gravity + 0.15:
+            jump_sound.play() # звук прыжка
             self.direction.y = self.jump_power
 
     def acceptGravity(self):

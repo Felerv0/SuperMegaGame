@@ -3,6 +3,10 @@ from tiles import *
 from settings import tile_size, screen_height, screen_width
 from player import Player, Effect
 
+pygame.mixer.pre_init(44100, -16, 1, 512)
+pygame.init()
+pygame.mixer.music.load('assets/sounds/robotiklove.mp3')
+pygame.mixer.music.set_volume(0.3)
 
 class Level:
     def __init__(self, level_map, surface):
@@ -85,6 +89,7 @@ class Level:
             Effect(tile.rect.x - 8, tile.rect.y - 8, 'assets/animations/boom', 0.15, 1, self.effects)
 
     def run(self):
+        pygame.mixer.music.play(-1)
         self.tiles.draw(self.surface)
         self.tiles.update(self.shift)
         self.scroll_x()

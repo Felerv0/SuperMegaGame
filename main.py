@@ -9,6 +9,10 @@ from useful import *
 
 pygame.init()
 
+pygame.mixer.music.load('assets/sounds/MainMenu.mp3')
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.play(-1)
+
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
 pygame.display.set_caption('Watch Mops')
@@ -17,7 +21,7 @@ level = Level(load_level('data/levels/1.txt'), screen)
 
 
 # эта функция отвечает за печать текста на кнопках и не только
-def render_text(message, x, y, font_color=(0, 0, 0), font_type=DEFAULT_FONT, font_size=50):
+def render_text(message, x, y, font_color=(0, 0, 0), font_type='assets/fonts/OpenSans-Bold.ttf', font_size=50):
     font_type = pygame.font.Font(font_type, font_size)
     text = font_type.render(message, True, font_color)
     screen.blit(text, (x, y))
@@ -65,6 +69,7 @@ def start_game():
             sys.exit()
         screen.fill(pygame.Color('black'))
         level.run()
+        pygame.mixer.music.stop()
         pygame.display.update()
         clock.tick(FPS)
 
