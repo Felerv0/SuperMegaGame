@@ -1,6 +1,7 @@
 import pygame
 from settings import player_size, getInput, screen_width
 from useful import import_animation
+from os import listdir
 
 pygame.mixer.pre_init(44100, -16, 1, 512)
 pygame.init()
@@ -51,6 +52,9 @@ class Player(pygame.sprite.Sprite):
 
         self.gun = None
         self.bullets = pygame.sprite.Group()
+        self.holdingGun = False
+        self.hp = 10
+        self.max_hp = 10
 
     def getInput(self):
         if getInput.isHolding(pygame.K_d):
@@ -68,6 +72,8 @@ class Player(pygame.sprite.Sprite):
             pause()
         if getInput.isKeyDown(pygame.K_q):
             self.shoot()
+        if getInput.isKeyDown(pygame.K_1):
+            self.switchGun()
 
     def shoot(self):
         if self.look_left:
@@ -75,6 +81,9 @@ class Player(pygame.sprite.Sprite):
         else:
             x_border = self.rect.right
         Bullet(x_border, self.rect.bottom - (self.rect.height // 2), 16, 1, self.look_left, self.bullets)
+
+    def switchGun(self):
+        self.holdingGun = not self.holdingGun
 
     def jump(self):
         if 0 <= self.direction.y < self.gravity + 0.15:
@@ -90,9 +99,11 @@ class Player(pygame.sprite.Sprite):
         self.animate()
 
     def loadAnimations(self):
-        self.animations = {'idle': [], 'run': [], 'fall': [], 'jump': [], 'gun_run': []}
-        for anim in self.animations.keys():
-            self.animations[anim] = import_animation('assets/animations/player_' + anim)
+        self.animations = {}
+        for anim in listdir('assets/animations/player'):
+            self.animations[anim[7:]] = import_animation('assets/animations/player/' + anim)
+        for anim in listdir('assets/animations/player_gun'):
+            self.animations[anim[7:]] = import_animation('assets/animations/player_gun/' + anim)
 
     def getCurrentAnimation(self):
         if self.direction.y > self.gravity + 0.15:
