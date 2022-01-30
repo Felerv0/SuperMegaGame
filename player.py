@@ -1,34 +1,15 @@
 import pygame
-from settings import player_size, getInput, screen_width
-from useful import import_animation
+from settings import player_size, getInput, screen_width, DEFAULT_FONT
+from useful import import_animation, render_text, termination
 from os import listdir
 
 pygame.mixer.pre_init(44100, -16, 1, 512)
 pygame.init()
-jump_sound = pygame.mixer.Sound('assets/sounds/jump.wav')
+release_sound = pygame.mixer.Sound('assets/sounds/release.wav')
 walk_sound = pygame.mixer.Sound('assets/sounds/walk.wav')
+shoot_sound = pygame.mixer.Sound('assets/sounds/blaster.wav')
+hit_sound = pygame.mixer.Sound('assets/sounds/hit.wav')
 
-def render_text(message, x, y, font_color=(0, 0, 0), font_type='assets/fonts/OpenSans-Bold.ttf', font_size=50):
-    font_type = pygame.font.Font(font_type, font_size)
-    text = font_type.render(message, True, font_color)
-    screen.blit(text, (x, y))
-
-def pause():
-    paused = True
-    while paused:
-        getInput.update()
-        if getInput.terminate:
-            pygame.quit()
-            sys.exit()
-
-        render_text('Paused. Press Enter to continue', 50, 300)
-
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            paused = False
-
-        pygame.display.update()
-        clock.tick(15)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, *groups):
@@ -47,8 +28,11 @@ class Player(pygame.sprite.Sprite):
         self.animation_index = 0
         self.current_animation = 'idle'
         self.look_left = False
+        self.shooting = False
+        self.shoot_delay = 0
         self.on_ground, self.on_ceiling = False, False
         self.on_left, self.on_right = False, False
+        self.walk_index = 0
 
         self.gun = None
         self.bullets = pygame.sprite.Group()
@@ -56,56 +40,60 @@ class Player(pygame.sprite.Sprite):
         self.hp = 10
         self.max_hp = 10
 
-    def getInput(self):
+    def getInput(self):  # получение клавиш для ввода
         if getInput.isHolding(pygame.K_d):
-            walk_sound.play()  # звук ходьбы
             self.direction.x = 1
         elif getInput.isHolding(pygame.K_a):
-            walk_sound.play() # звук ходьбы
             self.direction.x = -1
         else:
             self.direction.x = 0
 
         if getInput.isKeyDown(pygame.K_SPACE):
             self.jump()
-        if getInput.isKeyDown(pygame.K_ESCAPE):
-            pause()
         if getInput.isKeyDown(pygame.K_q):
             self.shoot()
         if getInput.isKeyDown(pygame.K_1):
             self.switchGun()
 
-    def shoot(self):
-        if self.look_left:
-            x_border = self.rect.left
-        else:
-            x_border = self.rect.right
-        Bullet(x_border, self.rect.bottom - (self.rect.height // 2), 16, 1, self.look_left, self.bullets)
+    def shoot(self):  # стрельба
+        if self.holdingGun and self.shoot_delay == 0:
+            if self.look_left:
+                x_border = self.rect.left
+            else:
+                x_border = self.rect.right
+            shoot_sound.play()
+            self.shoot_delay += 11
+            Bullet(x_border, self.rect.bottom - (self.rect.height // 2), 16, 1, self.look_left, self.bullets)
 
-    def switchGun(self):
+    def switchGun(self):  # взять / убрать оружие
         self.holdingGun = not self.holdingGun
 
-    def jump(self):
+    def jump(self):  # прыжок
         if 0 <= self.direction.y < self.gravity + 0.15:
-            jump_sound.play() # звук прыжка
             self.direction.y = self.jump_power
 
-    def acceptGravity(self):
+    def acceptGravity(self):  # применение гравитации к персонажу
         self.direction.y += self.gravity
         self.rect.y += self.direction.y
 
     def update(self):
+        if self.direction.x != 0 and -0.2 < self.direction.y < 1:
+            self.walk_index += 1
+            if self.walk_index > 15:
+                self.walk_index = 0
+                walk_sound.play()
+        self.shoot_delay = max(0, self.shoot_delay - 1)
         self.getInput()
         self.animate()
 
-    def loadAnimations(self):
+    def loadAnimations(self):  # загрузка анимаций
         self.animations = {}
         for anim in listdir('assets/animations/player'):
             self.animations[anim[7:]] = import_animation('assets/animations/player/' + anim)
         for anim in listdir('assets/animations/player_gun'):
             self.animations[anim[7:]] = import_animation('assets/animations/player_gun/' + anim)
 
-    def getCurrentAnimation(self):
+    def getCurrentAnimation(self):  # получение состояния героя
         if self.direction.y > self.gravity + 0.15:
             self.current_animation = 'fall'
         elif self.direction.y < 0:
@@ -115,8 +103,10 @@ class Player(pygame.sprite.Sprite):
                 self.current_animation = 'run'
             else:
                 self.current_animation = 'idle'
+        if self.holdingGun:
+            self.current_animation += '_gun'
 
-    def animate(self):
+    def animate(self):  # анимация игрока
         self.getCurrentAnimation()
         if self.direction.x > 0:
             self.look_left = False
@@ -144,7 +134,7 @@ class Player(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect(midtop=self.rect.midtop)
 
 
-class Bullet(pygame.sprite.Sprite):
+class Bullet(pygame.sprite.Sprite):  # пуля
     def __init__(self, x, y, speed, damage, left, *groups):
         super().__init__(*groups)
         self.image = pygame.image.load('assets/sprites/bullet.png')
@@ -157,11 +147,11 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self, shift):
         self.rect.x += self.speed + shift
-        if self.rect.x > screen_width + 500 or self.rect.x < -500:
+        if self.rect.x > screen_width + 500 or self.rect.x < -500:  # при выходе за отступы от краёв экрана, удаляется
             self.kill()
 
 
-class Effect(pygame.sprite.Sprite):
+class Effect(pygame.sprite.Sprite):  # класс для эффектов (анимация взрыва и т.д.)
     def __init__(self, x, y, animation, speed, repeat=1, *groups):
         super().__init__(*groups)
         self.animation = import_animation(animation)
@@ -172,6 +162,7 @@ class Effect(pygame.sprite.Sprite):
         self.repetition = 0
         self.speed = speed
         self.repeat = repeat
+        hit_sound.play()
 
     def update(self, shift=0):
         self.rect.x += shift

@@ -3,10 +3,6 @@ from tiles import *
 from settings import tile_size, screen_height, screen_width
 from player import Player, Effect
 
-pygame.mixer.pre_init(44100, -16, 1, 512)
-pygame.init()
-pygame.mixer.music.load('assets/sounds/robotiklove.mp3')
-pygame.mixer.music.set_volume(0.3)
 
 class Level:
     def __init__(self, level_map, surface):
@@ -15,7 +11,7 @@ class Level:
         self.shift = 0
         self.current_pos = (0, 0)
 
-    def setupLevel(self, level_map):
+    def setupLevel(self, level_map):  # создание уровня
         self.tiles = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.player = pygame.sprite.GroupSingle()
@@ -26,8 +22,16 @@ class Level:
                     Tile((x * tile_size[0], y * tile_size[1]), tile_size, self.tiles)
                 elif cell == '@':
                     Player((x * tile_size[0], y * tile_size[1]), self.player)
+        self.setupMusic()
 
-    def scroll_x(self):
+    def setupMusic(self):  # настройка музыки
+        pygame.mixer.pre_init(44100, -16, 1, 512)
+        pygame.init()
+        pygame.mixer.music.load('assets/music/robotiklove.mp3')
+        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.play(-1)
+
+    def scroll_x(self):  # скролл уровня по горизонтали
         if self.player.sprite.rect.centerx < screen_width // 3 and self.player.sprite.direction.x < 0:
             self.shift = 8
             self.player.sprite.speed = 0
@@ -41,7 +45,7 @@ class Level:
     def scroll_y(self):
         pass
 
-    def horizontalCollision(self):
+    def horizontalCollision(self):  # горизонтальная коллизия с объектами
         player = self.player.sprite
         player.rect.x += player.direction.x * player.speed
 
@@ -61,7 +65,7 @@ class Level:
         if player.on_right and (player.rect.right > self.current_pos[0] or player.direction.x <= 0):
             player.on_right = False
 
-    def verticalCollision(self):
+    def verticalCollision(self):  # вертикальная коллизия
         player = self.player.sprite
         player.acceptGravity()
 
@@ -81,7 +85,7 @@ class Level:
         if player.on_ceiling and player.direction.y > 0:
             player.on_ceiling = False
 
-    def bulletCollision(self):
+    def bulletCollision(self):  # коллизия пуль
         bullets = self.player.sprite.bullets
         enemy_collisions = pygame.sprite.groupcollide(bullets, self.enemies, True, False)
         tile_collisions = pygame.sprite.groupcollide(bullets, self.tiles, True, False)
@@ -89,7 +93,6 @@ class Level:
             Effect(tile.rect.x - 8, tile.rect.y - 8, 'assets/animations/boom', 0.15, 1, self.effects)
 
     def run(self):
-        pygame.mixer.music.play(-1)
         self.tiles.draw(self.surface)
         self.tiles.update(self.shift)
         self.scroll_x()

@@ -9,7 +9,7 @@ from useful import *
 
 pygame.init()
 
-pygame.mixer.music.load('assets/sounds/MainMenu.mp3')
+pygame.mixer.music.load('assets/music/MainMenu.mp3')
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1)
 
@@ -20,21 +20,15 @@ pygame.display.set_caption('Watch Mops')
 level = Level(load_level('data/levels/1.txt'), screen)
 
 
-# эта функция отвечает за печать текста на кнопках и не только
-def render_text(message, x, y, font_color=(0, 0, 0), font_type='assets/fonts/OpenSans-Bold.ttf', font_size=50):
-    font_type = pygame.font.Font(font_type, font_size)
-    text = font_type.render(message, True, font_color)
-    screen.blit(text, (x, y))
-
-
 class Button:  # кнопочки
-    def __init__(self, x, y, width, height, text, color=(255, 255, 0), hover=(0, 0, 255),
+    def __init__(self, x, y, width, height, text, surface, color=(255, 255, 0), hover=(0, 0, 255),
                  font=DEFAULT_FONT, font_size=50, text_color=(0, 0, 0)):
         self.width = width
         self.height = height
         self.x = x
         self.y = y
         self.text = text
+        self.surface = surface
         self.inactive_color = color
         self.active_color = hover
         self.button_sound = pygame.mixer.Sound('assets/sounds/button.wav')
@@ -58,35 +52,48 @@ class Button:  # кнопочки
                     action()
         else:
             pygame.draw.rect(screen, self.active_color, (self.x, self.y, self.width, self.height))
-        render_text(self.text, self.x + 10, self.y + 10, self.text_color, self.font, self.font_size)
+        render_text(self.text, self.x + 10, self.y + 10, self.surface, self.text_color, self.font, self.font_size)
 
 
 def start_game():
     while True:
         getInput.update()
         if getInput.terminate:
-            pygame.quit()
-            sys.exit()
+            termination()
+        elif getInput.isKeyDown(pygame.K_ESCAPE):
+            pause()
         screen.fill(pygame.Color('black'))
         level.run()
-        pygame.mixer.music.stop()
         pygame.display.update()
         clock.tick(FPS)
+
+
+def pause():
+    paused = True
+    while paused:
+        getInput.update()
+        if getInput.terminate:
+            termination()
+        render_text('Paused. Press ESC to continue', 50, 300, screen, (255, 255, 255))
+        if getInput.isKeyDown(pygame.K_ESCAPE):
+            paused = False
+
+        pygame.display.update()
+        clock.tick(15)
 
 
 def show_menu():  # Главное меню
     menu_background = pygame.transform.scale(pygame.image.load(MAIN_BACKGROUND), (screen_width, screen_height))
     screen.blit(menu_background, (0, 0))
 
-    start_button = Button(50, 250, 220, 100, 'Start')
-    settings_button = Button(50, 375, 220, 100, 'Settings')
-    quit_button = Button(50, 500, 220, 100, 'Quit')
+    start_button = Button(50, 250, 220, 100, 'Start', screen)
+    settings_button = Button(50, 375, 220, 100, 'Settings', screen)
+    quit_button = Button(50, 500, 220, 100, 'Quit', screen)
 
     while True:
         getInput.update()
         if getInput.terminate:
-            pygame.quit()
-            sys.exit()
+            termination()
 
         screen.blit(menu_background, (0, 0))
         start_button.draw(start_game)  # позиция кнопки, название и запуск уровня
