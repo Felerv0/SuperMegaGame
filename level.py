@@ -101,7 +101,7 @@ class Level:
                     elif player.direction.y > 0:
                         enemy.rect.bottom = tile.rect.top
                         enemy.direction.y = 0
-        for enemy in self.tiles.sprites():
+        for enemy in self.enemies.sprites():
             if enemy.rect.colliderect(player.rect):
                 if player.direction.y < 0:
                     player.rect.top = enemy.rect.bottom
