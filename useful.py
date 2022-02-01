@@ -1,3 +1,4 @@
+import json
 import os.path
 from os import walk, path
 import pygame
@@ -27,7 +28,28 @@ def render_text(message, x, y, screen, font_color=(0, 0, 0), font_type=DEFAULT_F
     screen.blit(text, (x, y))
 
 
-def termination():
+def termination(data):
+    save_data(data)
     pygame.mixer.music.stop()
     pygame.quit()
     sys.exit()
+
+
+def load_data():
+    if not os.path.isfile('data/data.json'):
+        open('data/data.json', 'w', encoding='utf8')
+    with open('data/data.json', encoding='utf8') as data_file:
+        if len(data_file.readlines()) == 0:
+            data = {
+                "gun_lvl": 1,
+                "max_hp": 10,
+                "gear": 0,
+            }
+        else:
+            data = json.load(data_file)
+    return data
+
+
+def save_data(data):
+    with open('data/data.json', 'w') as data_file:
+        json.dump(data, data_file)

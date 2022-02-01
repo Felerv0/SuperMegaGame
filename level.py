@@ -1,13 +1,14 @@
 import pygame
 from tiles import *
 from settings import tile_size, screen_height, screen_width
-from player import Player, Effect
+from player import Player, Effect, GameObject
 from enemy import *
 
 
 class Level:
-    def __init__(self, level_map, surface):
+    def __init__(self, level_map, surface, data):
         self.surface = surface
+        self.data = data
         self.setupLevel(level_map)
         self.shift = 0
         self.current_pos = (0, 0)
@@ -17,12 +18,13 @@ class Level:
         self.enemies = pygame.sprite.Group()
         self.player = pygame.sprite.GroupSingle()
         self.effects = pygame.sprite.Group()
+        self.objects = pygame.sprite.Group()
         for y, row in enumerate(level_map):
             for x, cell in enumerate(row):
                 if cell == 'X':
                     Tile((x * tile_size[0], y * tile_size[1]), tile_size, self.tiles)
                 elif cell == '@':
-                    Player((x * tile_size[0], y * tile_size[1]), self.player)
+                    Player((x * tile_size[0], y * tile_size[1]), self.data, self.player)
                 elif cell == 'T':
                     Enemy((x * tile_size[0], y * tile_size[1]), self.enemies)
         self.setupMusic()
@@ -31,7 +33,7 @@ class Level:
         pygame.mixer.pre_init(44100, -16, 1, 512)
         pygame.init()
         pygame.mixer.music.load('assets/music/robotiklove.mp3')
-        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.set_volume(0.07)
         pygame.mixer.music.play(-1)
 
     def scroll_x(self):  # скролл уровня по горизонтали
@@ -117,6 +119,13 @@ class Level:
         if player.on_ceiling and player.direction.y > 0:
             player.on_ceiling = False
 
+    def objectCollision(self):
+        for game_obj in self.objects.sprites():
+            if game_obj.rect.colliderect(self.player.sprite.rect):
+                if game_obj.type == 'gear':
+                    self.data['gear'] += 1
+                game_obj.kill()
+
     def bulletCollision(self):  # коллизия пуль
         bullets = self.player.sprite.bullets
         enemy_collisions = pygame.sprite.groupcollide(bullets, self.enemies, True, False)
@@ -125,6 +134,11 @@ class Level:
             Effect(tile.rect.x - 8, tile.rect.y - 8, 'assets/animations/boom', 0.15, 1, self.effects)
         for enemy in enemy_collisions.keys():
             Effect(enemy.rect.x - 8, enemy.rect.y - 8, 'assets/animations/boom', 0.15, 1, self.effects)
+            for dm in enemy_collisions[enemy]:
+                dm.damage(self.player.sprite.gun.damage)
+                if dm.hp <= 0:
+                    GameObject(enemy.rect.x - 8, enemy.rect.y - 8, 'gear', self.objects)
+                    dm.kill()
 
 
     def run(self):
@@ -136,6 +150,7 @@ class Level:
         self.horizontalCollision()
         self.verticalCollision()
         self.bulletCollision()
+        self.objectCollision()
 
         self.player.update()
         self.player.sprite.bullets.update(self.shift)
@@ -145,3 +160,5 @@ class Level:
         self.effects.draw(self.surface)
         self.enemies.update(self.shift)
         self.enemies.draw(self.surface)
+        self.objects.draw(self.surface)
+        self.objects.update(self.shift)

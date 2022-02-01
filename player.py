@@ -12,7 +12,7 @@ hit_sound = pygame.mixer.Sound('assets/sounds/hit.wav')
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, *groups):
+    def __init__(self, pos, userdata, *groups):
         super().__init__(*groups)
         self.loadAnimations()
 
@@ -34,11 +34,11 @@ class Player(pygame.sprite.Sprite):
         self.on_left, self.on_right = False, False
         self.walk_index = 0
 
-        self.gun = None
+        self.gun = Gun(userdata['gun_lvl'])
         self.bullets = pygame.sprite.Group()
         self.holdingGun = False
-        self.hp = 10
-        self.max_hp = 10
+        self.max_hp = userdata['max_hp']
+        self.hp = self.max_hp
 
     def getInput(self):  # получение клавиш для ввода
         if getInput.isHolding(pygame.K_d):
@@ -173,3 +173,20 @@ class Effect(pygame.sprite.Sprite):  # класс для эффектов (ан�
         if self.repetition >= self.repeat:
             self.kill()
         self.image = self.animation[int(self.animation_index)]
+
+
+class GameObject(pygame.sprite.Sprite):
+    def __init__(self, x, y, obj_type, *groups):
+        super().__init__(*groups)
+        self.type = obj_type
+        if obj_type == 'gear':
+            self.image = pygame.transform.scale(pygame.image.load('assets/sprites/gear.png'), (64, 64))
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+    def update(self, shift):
+        self.rect.x += shift
+
+class Gun:
+    def __init__(self, lvl):
+        self.damage = 1 * lvl
+        self.level = lvl

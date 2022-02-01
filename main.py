@@ -1,11 +1,12 @@
 import pygame
 import sys
 
-import settings
 from settings import *
 from tiles import *
 from level import *
 from useful import *
+
+data = load_data()
 
 pygame.init()
 
@@ -16,8 +17,6 @@ pygame.mixer.music.play(-1)
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
 pygame.display.set_caption('Watch Mops')
-
-level = Level(load_level('data/levels/1.txt'), screen)
 
 
 class Button:  # кнопочки
@@ -47,8 +46,7 @@ class Button:  # кнопочки
                 pygame.time.delay(300)
                 if action is not None:
                     if action == quit:
-                        pygame.quit()
-                        sys.exit()
+                        termination(data)
                     action()
         else:
             pygame.draw.rect(screen, self.active_color, (self.x, self.y, self.width, self.height))
@@ -56,10 +54,11 @@ class Button:  # кнопочки
 
 
 def start_game():
+    level = Level(load_level('data/levels/1.txt'), screen, data)
     while True:
         getInput.update()
         if getInput.terminate:
-            termination()
+            termination(data)
         elif getInput.isKeyDown(pygame.K_ESCAPE):
             pause()
         screen.fill(pygame.Color('black'))
@@ -73,7 +72,7 @@ def pause():
     while paused:
         getInput.update()
         if getInput.terminate:
-            termination()
+            termination(data)
         render_text('Paused. Press ESC to continue', 50, 300, screen, (255, 255, 255))
         if getInput.isKeyDown(pygame.K_ESCAPE):
             paused = False
@@ -93,7 +92,7 @@ def show_menu():  # Главное меню
     while True:
         getInput.update()
         if getInput.terminate:
-            termination()
+            termination(data)
 
         screen.blit(menu_background, (0, 0))
         start_button.draw(start_game)  # позиция кнопки, название и запуск уровня
