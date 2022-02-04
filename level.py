@@ -3,6 +3,7 @@ from tiles import *
 from settings import tile_size, screen_height, screen_width
 from player import Player, Effect, GameObject
 from enemy import *
+from useful import render_text
 
 
 class Level:
@@ -20,6 +21,8 @@ class Level:
         self.effects = pygame.sprite.Group()
         self.objects = pygame.sprite.Group()
         self.bg = pygame.sprite.GroupSingle(Background(bg))
+        self.ui = pygame.sprite.Group(UIObject((40, 50), (50, 50), 'assets/sprites/gear.png'),
+                                      UIObject((40, 110), (50, 50), 'assets/sprites/hp.png'))
 
         for y, row in enumerate(level_map):
             for x, cell in enumerate(row):
@@ -142,8 +145,15 @@ class Level:
                     GameObject(enemy.rect.x - 8, enemy.rect.y - 8, 'gear', self.objects)
                     dm.kill()
 
+    def showUI(self):
+        render_text(str(self.data['gear']), 100, 40, self.surface)
+        render_text(str(self.player.sprite.hp), 100, 100, self.surface, (255, 0, 0))
+        self.ui.draw(self.surface)
+
+
     def run(self):
         self.bg.draw(self.surface)
+        self.showUI()
 
         self.tiles.draw(self.surface)
         self.tiles.update(self.shift)
@@ -172,3 +182,10 @@ class Background(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.image = pygame.transform.scale(pygame.image.load(img), (screen_width, screen_height))
         self.rect = self.image.get_rect()
+
+
+class UIObject(pygame.sprite.Sprite):
+    def __init__(self, pos, size, img, *groups):
+        super().__init__(*groups)
+        self.image = pygame.transform.scale(pygame.image.load(img), size)
+        self.rect = self.image.get_rect(topleft=pos)
