@@ -54,14 +54,13 @@ class Button:  # кнопочки
 
 
 def start_game():
-    level = Level(load_level('data/levels/1.txt'), screen, data)
+    level = Level(load_level('data/levels/demo.txt'), screen, data, 'assets/images/bg.jpg')
     while True:
         getInput.update()
         if getInput.terminate:
             termination(data)
         elif getInput.isKeyDown(pygame.K_ESCAPE):
             pause()
-        screen.fill(pygame.Color('black'))
         level.run()
         pygame.display.update()
         clock.tick(FPS)

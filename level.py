@@ -6,23 +6,25 @@ from enemy import *
 
 
 class Level:
-    def __init__(self, level_map, surface, data):
+    def __init__(self, level_map, surface, data, bg):
         self.surface = surface
         self.data = data
-        self.setupLevel(level_map)
+        self.setupLevel(level_map, bg)
         self.shift = 0
         self.current_pos = (0, 0)
 
-    def setupLevel(self, level_map):  # создание уровня
+    def setupLevel(self, level_map, bg):  # создание уровня
         self.tiles = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.player = pygame.sprite.GroupSingle()
         self.effects = pygame.sprite.Group()
         self.objects = pygame.sprite.Group()
+        self.bg = pygame.sprite.GroupSingle(Background(bg))
+
         for y, row in enumerate(level_map):
             for x, cell in enumerate(row):
                 if cell == 'X':
-                    Tile((x * tile_size[0], y * tile_size[1]), tile_size, self.tiles)
+                    Tile((x * tile_size[0], y * tile_size[1]), tile_size, '', self.tiles)
                 elif cell == '@':
                     Player((x * tile_size[0], y * tile_size[1]), self.data, self.player)
                 elif cell == 'T':
@@ -140,8 +142,9 @@ class Level:
                     GameObject(enemy.rect.x - 8, enemy.rect.y - 8, 'gear', self.objects)
                     dm.kill()
 
-
     def run(self):
+        self.bg.draw(self.surface)
+
         self.tiles.draw(self.surface)
         self.tiles.update(self.shift)
         self.scroll_x()
@@ -162,3 +165,10 @@ class Level:
         self.enemies.draw(self.surface)
         self.objects.draw(self.surface)
         self.objects.update(self.shift)
+
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self, img, *groups):
+        super().__init__(*groups)
+        self.image = pygame.transform.scale(pygame.image.load(img), (screen_width, screen_height))
+        self.rect = self.image.get_rect()

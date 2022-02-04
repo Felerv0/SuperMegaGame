@@ -38,15 +38,15 @@ def termination(data):
 def load_data():
     if not os.path.isfile('data/data.json'):
         open('data/data.json', 'w', encoding='utf8')
-    with open('data/data.json', encoding='utf8') as data_file:
-        if len(data_file.readlines()) == 0:
-            data = {
-                "gun_lvl": 1,
-                "max_hp": 10,
-                "gear": 0,
-            }
-        else:
-            data = json.load(data_file)
+    data_file = open('data/data.json')
+    if len(data_file.readlines()) == 0:
+        data = {
+            "gun_lvl": 1,
+            "max_hp": 10,
+            "gear": 0,
+        }
+    else:
+        data = json.load(open('data/data.json'))
     return data
 
 
